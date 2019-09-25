@@ -1,0 +1,168 @@
+language: python
+python: "3.7"
+dist: xenial
+
+notifications:
+  email: false
+
+env:
+  global:
+    # GitHub personal access token ("GITHUB_OAUTH_TOKEN" environment variable)
+    # (https://docs.travis-ci.com/user/deployment/releases/#authenticating-with-an-oauth-token)
+    #
+    # 1. Go to https://github.com/settings/tokens
+    # 2. Create new token with "public_repo" permission
+    # 3. Encrypt token by running:
+    #
+    #     travis encrypt GITHUB_OAUTH_TOKEN=<token>
+    #
+    # 4. Paste it here
+    - secure: "wSUGdLzSenjTdVmdaYK9UhXHfvNQOXPOyMUxGkxk7G0JoPiMvttNEI33hlZjBWlJ4pQj6qFI2/eaDgTXCzQeALmLQoVi+P7Hxoy8d3ou+luollpUgMt8aPd2wvbJdGKOSBUs4tISRKTapbL2vmDP9l9Di8L45HsD6Brx3MlTBgRVlwdZJclZFSs8l5rLVFYsvhLr3C2XPpPUqI/QRSZZZ504tmhkY45Pu1mMh6aFH+bwetPxor0Z+pagbsqhisqPCHGfbln5wiTJVFfBcv0Nm5phavbBihspS70/3wDOI+sxKZRzkYaNi9CwAFst9wZ8lL936bdLrowIk68cYMNqy7u1poMBX5nuZnsxFhq3pQairlxoROkxM7Vf0UfGohSwjwi/dYivUNk23GZX30HFeg5pMv6mDQbxRdTRtGwa13JzlShpj9nOXVFcTJkY2PXwFrsrh91OXtqF61MFTaNafu2CsTGmJtyceqCbGiblQmT7h9H03R04PwaLPCgvagD0NzuH7fXsi9bkYU+QXqVcWGxarbhWIaP8ONSNy43YLUvmtCAlyWGusDvTbaRzi5HomWij4PozZrvSaD7P2minKeYdM8gLsvvBiGze2T2H7RtYrTVpWWdG3iOdGtDED+HHexoT2zvLYA+CEB69ckVJp3KvOQJIR+ydSD6GDKALWZs="
+
+    # Bintray username to use for logging in
+    - BINTRAY_USERNAME=mediacloud-artifacts
+
+    # Bintray API key ("BINTRAY_API_KEY" environment variable)
+    #
+    # 1. Go to https://bintray.com/profile/edit
+    # 2. Click "API Key"
+    # 4. Encrypt API key by running:
+    #
+    #     travis encrypt BINTRAY_API_KEY=<api_key>
+    #
+    # 5. Paste it here
+    - secure: "Lh7WnyB8fvsr/Vc/Xf0hUPoa97Ci5vlgXAspnyZqgRo8bHMA06E5UKfVYVIqzaOIalG2s5SmaZiSyraO7PyF0WdD46tIfmw1ZOM2QRvOFnHp9ilpagCbj9+X7CyH3y5X21hza/Fc8hJ36L6e7l3yVm/jlVzS75YOOUMr5VCzs4hfLQDyzcEi4eae08BvQFaztUZrcydubNZQ5dsP3mHdtbrlk3qlwQxxb5sjH2LPJuz3H/SMg773/79bS1DQRN3JPmqT+5RYrB6WLd3AMasi5QxXtPIidcv+Qm+9mbA+XHkEgNXI3udUdKiN56wZI1o7YhQ9HUCzXOVjnhE+BoPfb+TdIytKemyGJTRJE64JBdnlUZx7ZUg9U0sj0TUriL4WARHAHNPe8zneYH6ZMl4v3IlIY+sTW7GQEFXkzY30gNjw9/z6q8Fs67S7d9/wOI2UG5zL0Pxw0hHljxW+srdPjn0sP69XwzlpdTFfKWDSsiS8v2VAkBTH7LkeeCt+HuJQsrFR9VL4PwW42Wh7vJ1SacC8cKZlFqLzk0fMkEt/s0dI/bTZYX/0ZsdW2AWLAd5Hj4c4Fh3D202IsAO9HeNJ5hlmDy6AemtRoNRj/sKuuIthILYhXVNYDVNrj2+z13zFqEBAYeiv+vKP56U8XbjVJt3ptitr87e66FFUuPJux3k="
+
+    # Bintray user or organization that owns the repository
+    - BINTRAY_SUBJECT=neologd-unofficial
+
+    # Bintray repository names for each type of package
+    - BINTRAY_REPOSITORY_TGZ=mecab-ipadic-neologd-tgz
+    - BINTRAY_REPOSITORY_DEB=mecab-ipadic-neologd-deb
+    - BINTRAY_REPOSITORY_RPM=mecab-ipadic-neologd-rpm
+
+    # Temporary paths to save generated packages to
+    - PACKAGE_PATH_TGZ=$HOME/mecab-ipadic-neologd-$TRAVIS_TAG.tgz
+    - PACKAGE_PATH_DEB=$HOME/mecab-ipadic-neologd-$TRAVIS_TAG.deb
+    - PACKAGE_PATH_RPM=$HOME/mecab-ipadic-neologd-$TRAVIS_TAG.rpm
+
+    # Temporary paths to Bintray descriptor JSON files to generate
+    - BINTRAY_DESCRIPTOR_TGZ=$HOME/bintray-tgz.json
+    - BINTRAY_DESCRIPTOR_DEB=$HOME/bintray-deb.json
+    - BINTRAY_DESCRIPTOR_RPM=$HOME/bintray-rpm.json
+
+install:
+  - gem install --no-ri --no-rdoc fpm
+
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - file
+      - git
+      - libmecab-dev
+      - make
+      - mecab
+      - mecab-ipadic-utf8
+      - rpm
+      - ruby
+      - ruby-dev
+      - xz-utils
+
+before_script:
+  - mkdir target/
+
+script:
+  - bash ./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd --prefix `readlink -m target/` --forceyes
+
+after_success:
+
+  # Create .tgz
+  - >
+      if [[ "$TRAVIS_TAG" != "" ]]; then python3 create_package.py
+      --type tgz
+      --input_dir target/
+      --version_tag $TRAVIS_TAG
+      --output_file $PACKAGE_PATH_TGZ
+      --bintray_descriptor_file $BINTRAY_DESCRIPTOR_TGZ
+      --bintray_repository_name $BINTRAY_REPOSITORY_TGZ
+      --bintray_subject $BINTRAY_SUBJECT; fi
+
+  # Create .deb
+  - >
+      if [[ "$TRAVIS_TAG" != "" ]]; then python3 create_package.py
+      --type deb
+      --input_dir target/
+      --version_tag $TRAVIS_TAG
+      --output_file $PACKAGE_PATH_DEB
+      --bintray_descriptor_file $BINTRAY_DESCRIPTOR_DEB
+      --bintray_repository_name $BINTRAY_REPOSITORY_DEB
+      --bintray_subject $BINTRAY_SUBJECT; fi
+
+  # Create .rpm
+  - >
+      if [[ "$TRAVIS_TAG" != "" ]]; then python3 create_package.py
+      --type rpm
+      --input_dir target/
+      --version_tag $TRAVIS_TAG
+      --output_file $PACKAGE_PATH_RPM
+      --bintray_descriptor_file $BINTRAY_DESCRIPTOR_RPM
+      --bintray_repository_name $BINTRAY_REPOSITORY_RPM
+      --bintray_subject $BINTRAY_SUBJECT; fi
+
+deploy:
+
+  # Deploy .tgz to Bintray
+  - provider: bintray
+    file: "$BINTRAY_DESCRIPTOR_TGZ"
+    user: "$BINTRAY_USERNAME"
+    key: "$BINTRAY_API_KEY"
+    skip_cleanup: true
+    on:
+      tags: true
+
+  # Deploy .deb to Bintray
+  - provider: bintray
+    file: "$BINTRAY_DESCRIPTOR_DEB"
+    user: "$BINTRAY_USERNAME"
+    key: "$BINTRAY_API_KEY"
+    skip_cleanup: true
+    on:
+      tags: true
+
+  # Deploy .rpm to Bintray
+  - provider: bintray
+    file: "$BINTRAY_DESCRIPTOR_RPM"
+    user: "$BINTRAY_USERNAME"
+    key: "$BINTRAY_API_KEY"
+    skip_cleanup: true
+    on:
+      tags: true
+
+  # Deploy .tgz to GitHub Releases
+  - provider: releases
+    api_key: "$GITHUB_OAUTH_TOKEN"
+    file: "$PACKAGE_PATH_TGZ"
+    skip_cleanup: true
+    overwrite: true
+    on:
+      tags: true
+
+  # Deploy .deb to GitHub Releases
+  - provider: releases
+    api_key: "$GITHUB_OAUTH_TOKEN"
+    file: "$PACKAGE_PATH_DEB"
+    skip_cleanup: true
+    overwrite: true
+    on:
+      tags: true
+
+  # Deploy .rpm to GitHub Releases
+  - provider: releases
+    api_key: "$GITHUB_OAUTH_TOKEN"
+    file: "$PACKAGE_PATH_RPM"
+    skip_cleanup: true
+    overwrite: true
+    on:
+      tags: true
