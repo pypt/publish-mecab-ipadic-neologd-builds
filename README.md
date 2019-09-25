@@ -59,3 +59,14 @@ You can download pre-build mecab-ipadic-NEologd tarball packages from:
 **<https://bintray.com/neologd-unofficial/mecab-ipadic-neologd-tgz>**
 
 or from our [GitHub releases](releases) page.
+
+
+## Creating a new release
+
+```bash
+git flow release start $(date +%F)
+git flow release finish $(date +%F)
+git push -u origin develop
+git push -u origin master
+git push --tags
+```
